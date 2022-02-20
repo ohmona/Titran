@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "ThirdPersonComponent.h"
 #include "PlayerChar.generated.h"
 
 UCLASS()
@@ -26,9 +27,12 @@ public:
 	bool bReadySprint = true;
 	bool bTakingBreak = false;
 
+	bool bFirstPerson = true;
+
 public:
 	class UPlayerMovementComponent* Movement;
-	UPROPERTY(EditAnywhere) class UCameraComponent* Camera;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly) class UCameraComponent* Camera;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly) class UThirdPersonComponent* ThirdPerson;
 
 protected:
 	virtual void BeginPlay() override;
@@ -48,6 +52,13 @@ public:
 	void BSprint();
 	void ESprint();
 
+	void BSelect();
+	void ESelect();
+
 	void ResetCamera();
 	void ReadySprint();
+
+	void ChangeView();
+
+	FHitResult DoLineTrace();
 };

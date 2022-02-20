@@ -16,6 +16,9 @@ APlayerChar::APlayerChar()
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera Component"));
 	Camera->SetupAttachment(RootComponent);
 	Camera->SetRelativeLocation(FVector(25.0f, 0.0f, 65.0f));
+
+	ThirdPerson = CreateDefaultSubobject<UThirdPersonComponent>(TEXT("Third Person Component"));
+	ThirdPerson->SetupAttachment(RootComponent);
 }
 
 void APlayerChar::BeginPlay()
@@ -55,6 +58,11 @@ void APlayerChar::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 
 	InputComponent->BindAction("Sprint", IE_Pressed, this, &APlayerChar::BSprint);
 	InputComponent->BindAction("Sprint", IE_Released, this, &APlayerChar::ESprint);
+
+	InputComponent->BindAction("Select", IE_Pressed, this, &APlayerChar::BSelect);
+	InputComponent->BindAction("Select", IE_Released, this, &APlayerChar::ESelect);
+
+	InputComponent->BindAction("SwitchView", IE_Pressed, this, &APlayerChar::ChangeView);
 }
 
 void APlayerChar::MoveForward(float AxisValue)
@@ -99,6 +107,7 @@ void APlayerChar::Lookup(float AxisValue)
 {
 	AddControllerPitchInput(AxisValue);
 	Camera->SetWorldRotation(GetControlRotation());
+	ThirdPerson->SetWorldRotation(GetControlRotation());
 }
 
 void APlayerChar::BJump()
@@ -129,6 +138,18 @@ void APlayerChar::ESprint()
 		.SetTimer(instantTimerHandle, this, &APlayerChar::ResetCamera, 0.1f, false);
 }
 
+void APlayerChar::BSelect()
+{
+	FHitResult hit = DoLineTrace();
+	FVector loc = hit.Location;
+
+	UE_LOG(LogTemp, Log, TEXT("[fun] %s"), *loc.ToString());
+}
+
+void APlayerChar::ESelect()
+{
+}
+
 void APlayerChar::ResetCamera()
 {
 	Camera->SetRelativeLocation(FVector(25.0f, 0.0f, 65.0f));
@@ -138,4 +159,41 @@ void APlayerChar::ReadySprint()
 {
 	bReadySprint = true;
 	bTakingBreak = false;
+}
+
+void APlayerChar::ChangeView()
+{
+	if (bFirstPerson) {
+		bFirstPerson = false;
+		Camera->Deactivate();
+		ThirdPerson->Camera->Activate();
+	}
+	else {
+		bFirstPerson = true;
+		Camera->Activate();
+		ThirdPerson->Camera->Deactivate();
+	}
+}
+
+FHitResult APlayerChar::DoLineTrace()
+{
+	FVector rayLocation;
+	FRotator rayRotation;
+	FVector endTrace = FVector::ZeroVector;
+
+	APlayerController* const playerController = GetWorld()->GetFirstPlayerController();
+
+	if (playerController)
+	{
+		playerController->GetPlayerViewPoint(rayLocation, rayRotation);
+		endTrace = rayLocation + (rayRotation.Vector() * 1500);
+	}
+
+	FCollisionQueryParams traceParams(SCENE_QUERY_STAT(instantShot), true, GetInstigator());
+	FHitResult hit(ForceInit);
+	if (GetWorld()->LineTraceSingleByChannel(hit, rayLocation, endTrace, ECC_Visibility, traceParams)) {
+		return hit;
+	}
+	FHitResult force(ForceInit);
+	return force;
 }

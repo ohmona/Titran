@@ -75,7 +75,6 @@ void UPlayerMovementComponent::TickComponent(float DeltaTime, enum ELevelTick Ti
     Cast<APlayerChar>(PawnOwner)->bWalking = false;
     Cast<APlayerChar>(PawnOwner)->bSprinting = false;
     if (move_speed == 250 && !recent_move_velocity.IsNearlyZero()) {
-        UE_LOG(LogTemp, Log, TEXT("walk"));
         Cast<APlayerChar>(PawnOwner)->bWalking = true;
         Cast<APlayerChar>(PawnOwner)->bSprinting = false;
     }
