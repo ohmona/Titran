@@ -14,7 +14,21 @@ class TITRAN_API APlayerChar : public ACharacter
 public:
 	APlayerChar();
 
+	UPROPERTY(BlueprintReadOnly) bool bWalking = false;
+	UPROPERTY(BlueprintReadOnly) bool bSprinting = false;
+	UPROPERTY(BlueprintReadOnly) bool bJumping = false;
+
+	UPROPERTY(BlueprintReadOnly) bool bMoveLeft = false;
+	UPROPERTY(BlueprintReadOnly) bool bMoveRight = false;
+	UPROPERTY(BlueprintReadOnly) bool bMoveBack = false;
+	UPROPERTY(BlueprintReadOnly) bool bMoveNACHVORNE = false;
+
+	bool bReadySprint = true;
+	bool bTakingBreak = false;
+
+public:
 	class UPlayerMovementComponent* Movement;
+	UPROPERTY(EditAnywhere) class UCameraComponent* Camera;
 
 protected:
 	virtual void BeginPlay() override;
@@ -30,4 +44,10 @@ public:
 
 	void BJump();
 	void EJump();
+
+	void BSprint();
+	void ESprint();
+
+	void ResetCamera();
+	void ReadySprint();
 };

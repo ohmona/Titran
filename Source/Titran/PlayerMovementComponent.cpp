@@ -3,6 +3,7 @@
 
 #include "PlayerMovementComponent.h"
 #include <Titran/PlayerChar.h>
+#include <Engine/Classes/Camera/CameraComponent.h>
 
 UPlayerMovementComponent::UPlayerMovementComponent() {
 }
@@ -25,10 +26,13 @@ void UPlayerMovementComponent::TickComponent(float DeltaTime, enum ELevelTick Ti
 
     if (!b_on_floor) AddMoveVelocity(FVector(0.0f, 0.0f, -0.98));
 
+    Cast<APlayerChar>(PawnOwner)->bJumping = false;
     // start jump if requested and ready
     if (jump_request && jump_ready) {
         jump_ready = false;
         is_jumping = true;
+
+        Cast<APlayerChar>(PawnOwner)->Camera->SetRelativeLocation(FVector(25.0f, 0.0f, 58.0f));
     }
 
     // Add frame vector after formel https://tenlie10.tistory.com/124
@@ -41,6 +45,8 @@ void UPlayerMovementComponent::TickComponent(float DeltaTime, enum ELevelTick Ti
         }
         time_jump += DeltaTime * jump_speed;
         ClearMoveVelocity();
+
+        Cast<APlayerChar>(PawnOwner)->bJumping = true;
     }
 
     // if it's jumping, z-vector is negative and time is running, disable jump
@@ -48,6 +54,11 @@ void UPlayerMovementComponent::TickComponent(float DeltaTime, enum ELevelTick Ti
         time_jump = 0;
         jump_ready = true;
         is_jumping = false;
+
+        FTimerHandle instantTimerHandle;
+        Cast<APlayerChar>(PawnOwner)->GetWorldTimerManager()
+            .SetTimer(instantTimerHandle, Cast<APlayerChar>(PawnOwner), &APlayerChar::ResetCamera, 0.075f, false);
+        Cast<APlayerChar>(PawnOwner)->bJumping = false;
     }
 
     // Apply move vector
@@ -56,8 +67,21 @@ void UPlayerMovementComponent::TickComponent(float DeltaTime, enum ELevelTick Ti
         FHitResult* hit = nullptr;
 
         Cast<APlayerChar>(PawnOwner)->SetActorLocation(desiration, true, hit, ETeleportType::TeleportPhysics);
-        recent_move_velocity = move_velocity;
-        move_velocity = FVector::ZeroVector;
+    }
+    recent_move_velocity = move_velocity;
+    move_velocity = FVector::ZeroVector;
+
+    // change state
+    Cast<APlayerChar>(PawnOwner)->bWalking = false;
+    Cast<APlayerChar>(PawnOwner)->bSprinting = false;
+    if (move_speed == 250 && !recent_move_velocity.IsNearlyZero()) {
+        UE_LOG(LogTemp, Log, TEXT("walk"));
+        Cast<APlayerChar>(PawnOwner)->bWalking = true;
+        Cast<APlayerChar>(PawnOwner)->bSprinting = false;
+    }
+    else if (move_speed == 400 && !recent_move_velocity.IsNearlyZero()) {
+        Cast<APlayerChar>(PawnOwner)->bSprinting = true;
+        Cast<APlayerChar>(PawnOwner)->bWalking = false;
     }
 };
 

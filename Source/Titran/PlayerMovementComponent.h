@@ -31,8 +31,8 @@ public:
 	bool jump_ready = true;
 	bool is_jumping = false;
 	float time_jump = 0.0f;
-	float jump_force = 15.0f;
-	float jump_speed = 5.0f;
+	float jump_force = 25.25f;
+	float jump_speed = 6.2f;
 
 	// floor
 	bool b_on_floor = false;
