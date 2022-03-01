@@ -5,6 +5,7 @@
 #include "PlayerMovementComponent.h"
 #include <Engine/Classes/Components/CapsuleComponent.h>
 #include <Engine/Classes/Camera/CameraComponent.h>
+#include <Net/UnrealNetwork.h>
 
 APlayerChar::APlayerChar()
 {
@@ -19,6 +20,8 @@ APlayerChar::APlayerChar()
 
 	ThirdPerson = CreateDefaultSubobject<UThirdPersonComponent>(TEXT("Third Person Component"));
 	ThirdPerson->SetupAttachment(RootComponent);
+
+	bReplicates = true;
 }
 
 void APlayerChar::BeginPlay()
@@ -41,6 +44,14 @@ void APlayerChar::Tick(float DeltaTime)
 		GetWorldTimerManager()
 			.SetTimer(instantTimerHandle, this, &APlayerChar::ReadySprint, breakTime, false);
 	}
+}
+
+void APlayerChar::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(APlayerChar, bSprinting);
+	DOREPLIFETIME(APlayerChar, bWalking);
 }
 
 void APlayerChar::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -67,22 +78,26 @@ void APlayerChar::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 
 void APlayerChar::MoveForward(float AxisValue)
 {
+	SMF(AxisValue);
 	bMoveBack = false;
 	bMoveNACHVORNE = false;
 	if (Movement && !bMoveRight && !bMoveLeft) {
 		if (AxisValue > 0) {
 			bMoveNACHVORNE = true;
-			Movement->AddMoveVelocity(GetActorForwardVector() * AxisValue);
+			if (GetWorld()->GetAuthGameMode() == nullptr) 
+				Movement->AddMoveVelocity(GetActorForwardVector() * AxisValue);
 		}
-		else if(AxisValue < 0) {
+		else if (AxisValue < 0) {
 			bMoveBack = true;
-			Movement->AddMoveVelocity(GetActorForwardVector() * AxisValue / 2);
+			if (GetWorld()->GetAuthGameMode() == nullptr) 
+				Movement->AddMoveVelocity(GetActorForwardVector() * AxisValue / 2);
 		}
 	}
 }
 
 void APlayerChar::MoveRight(float AxisValue)
 {
+	SMR(AxisValue);
 	bMoveRight = false;
 	bMoveLeft = false;
 	if (Movement && !bMoveNACHVORNE && !bMoveBack) {
@@ -93,7 +108,8 @@ void APlayerChar::MoveRight(float AxisValue)
 			else if (AxisValue < 0) {
 				bMoveLeft = true;
 			}
-			Movement->AddMoveVelocity(GetActorRightVector() * AxisValue / 4);
+			if (GetWorld()->GetAuthGameMode() == nullptr)
+				Movement->AddMoveVelocity(GetActorRightVector() * AxisValue / 4);
 		}
 	}
 }
@@ -112,12 +128,14 @@ void APlayerChar::Lookup(float AxisValue)
 
 void APlayerChar::BJump()
 {
+	SBJ();
 	bWalking = false;
 	Movement->jump_request = true;
 }
 
 void APlayerChar::EJump()
 {
+	SEJ();
 	Movement->jump_request = false;
 }
 
@@ -127,6 +145,7 @@ void APlayerChar::BSprint()
 		bReadySprint = false;
 		Movement->move_speed = 400;
 		if (!Movement->recent_move_velocity.IsNearlyZero()) Camera->SetRelativeLocation(FVector(40.0f, 0.0f, 55.0f));
+		SBS();
 	}
 }
 
@@ -134,9 +153,126 @@ void APlayerChar::ESprint()
 {
 	Movement->move_speed = 250;
 	FTimerHandle instantTimerHandle;
-	GetWorldTimerManager()
-		.SetTimer(instantTimerHandle, this, &APlayerChar::ResetCamera, 0.1f, false);
+	GetWorldTimerManager().SetTimer(instantTimerHandle, this, &APlayerChar::ResetCamera, 0.1f, false);
+	SES();
 }
+
+void APlayerChar::SMF_Implementation(float AxisValue)
+{
+	bMoveBack = false;
+	bMoveNACHVORNE = false;
+	if (Movement && !bMoveRight && !bMoveLeft) {
+		if (AxisValue > 0) {
+			bMoveNACHVORNE = true;
+			Movement->AddMoveVelocity(GetActorForwardVector() * AxisValue);
+		}
+		else if (AxisValue < 0) {
+			bMoveBack = true;
+			Movement->AddMoveVelocity(GetActorForwardVector() * AxisValue / 2);
+		}
+	}
+	MMF(AxisValue);
+}
+
+void APlayerChar::SMR_Implementation(float AxisValue)
+{
+	bMoveRight = false;
+	bMoveLeft = false;
+	if (Movement && !bMoveNACHVORNE && !bMoveBack) {
+		if (Movement->move_speed != 400) {
+			if (AxisValue > 0) {
+				bMoveRight = true;
+			}
+			else if (AxisValue < 0) {
+				bMoveLeft = true;
+			}
+			Movement->AddMoveVelocity(GetActorRightVector() * AxisValue / 4);
+		}
+	}
+	MMR(AxisValue);
+}
+
+void APlayerChar::SBJ_Implementation()
+{
+	bWalking = false;
+	Movement->jump_request = true;
+	MBJ();
+}
+
+void APlayerChar::SEJ_Implementation()
+{
+	Movement->jump_request = false;
+	MEJ();
+}
+
+void APlayerChar::SBS_Implementation()
+{
+	Movement->move_speed = 400;
+	bSprinting = true;
+	bWalking = false;
+	MBS();
+}
+
+void APlayerChar::SES_Implementation()
+{
+	Movement->move_speed = 250;
+	bSprinting = false;
+	bWalking = true;
+	MES();
+}
+
+
+void APlayerChar::MMF_Implementation(float AxisValue)
+{
+	bMoveBack = false;
+	bMoveNACHVORNE = false;
+	if (Movement && !bMoveRight && !bMoveLeft) {
+		if (AxisValue > 0) {
+			bMoveNACHVORNE = true;
+		}
+		else if (AxisValue < 0) {
+			bMoveBack = true;
+		}
+	}
+}
+
+void APlayerChar::MMR_Implementation(float AxisValue)
+{
+	bMoveRight = false;
+	bMoveLeft = false;
+	if (Movement && !bMoveNACHVORNE && !bMoveBack) {
+		if (Movement->move_speed != 400) {
+			if (AxisValue > 0) {
+				bMoveRight = true;
+			}
+			else if (AxisValue < 0) {
+				bMoveLeft = true;
+			}
+		}
+	}
+}
+
+void APlayerChar::MBJ_Implementation()
+{
+	bWalking = false;
+	Movement->jump_request = true;
+}
+
+void APlayerChar::MEJ_Implementation()
+{
+	Movement->jump_request = false;
+}
+
+void APlayerChar::MBS_Implementation()
+{
+	Movement->move_speed = 400;
+}
+
+void APlayerChar::MES_Implementation()
+{
+	Movement->move_speed = 250;
+}
+
 
 void APlayerChar::BSelect()
 {

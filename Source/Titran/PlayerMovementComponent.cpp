@@ -4,6 +4,7 @@
 #include "PlayerMovementComponent.h"
 #include <Titran/PlayerChar.h>
 #include <Engine/Classes/Camera/CameraComponent.h>
+#include <Net/UnrealNetwork.h>
 
 UPlayerMovementComponent::UPlayerMovementComponent() {
 }
@@ -25,6 +26,7 @@ void UPlayerMovementComponent::TickComponent(float DeltaTime, enum ELevelTick Ti
     floor_distance = Floor.GetDistanceToFloor();
 
     if (!b_on_floor) AddMoveVelocity(FVector(0.0f, 0.0f, -0.98));
+
 
     Cast<APlayerChar>(PawnOwner)->bJumping = false;
     // start jump if requested and ready
@@ -63,25 +65,13 @@ void UPlayerMovementComponent::TickComponent(float DeltaTime, enum ELevelTick Ti
 
     // Apply move vector
     if (!move_velocity.IsZero() && !is_jumping) {
-        FVector desiration = origin + (move_velocity * move_speed * 0.01f);
+        FVector desiration = origin + (move_velocity * move_speed * DeltaTime);
         FHitResult* hit = nullptr;
 
         Cast<APlayerChar>(PawnOwner)->SetActorLocation(desiration, true, hit, ETeleportType::TeleportPhysics);
     }
     recent_move_velocity = move_velocity;
     move_velocity = FVector::ZeroVector;
-
-    // change state
-    Cast<APlayerChar>(PawnOwner)->bWalking = false;
-    Cast<APlayerChar>(PawnOwner)->bSprinting = false;
-    if (move_speed == 250 && !recent_move_velocity.IsNearlyZero()) {
-        Cast<APlayerChar>(PawnOwner)->bWalking = true;
-        Cast<APlayerChar>(PawnOwner)->bSprinting = false;
-    }
-    else if (move_speed == 400 && !recent_move_velocity.IsNearlyZero()) {
-        Cast<APlayerChar>(PawnOwner)->bSprinting = true;
-        Cast<APlayerChar>(PawnOwner)->bWalking = false;
-    }
 };
 
 void UPlayerMovementComponent::AddMoveVelocity(FVector velocity)

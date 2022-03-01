@@ -15,8 +15,8 @@ class TITRAN_API APlayerChar : public ACharacter
 public:
 	APlayerChar();
 
-	UPROPERTY(BlueprintReadOnly) bool bWalking = false;
-	UPROPERTY(BlueprintReadOnly) bool bSprinting = false;
+	UPROPERTY(BlueprintReadOnly, replicated) bool bWalking = false;
+	UPROPERTY(BlueprintReadOnly, replicated) bool bSprinting = false;
 	UPROPERTY(BlueprintReadOnly) bool bJumping = false;
 
 	UPROPERTY(BlueprintReadOnly) bool bMoveLeft = false;
@@ -40,7 +40,10 @@ protected:
 public:	
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+	virtual void GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const;
 
+/* Movement function */
+public:
 	void MoveForward(float AxisValue);
 	void MoveRight(float AxisValue);
 	void Turn(float AxisValue);
@@ -57,6 +60,27 @@ public:
 
 	void ResetCamera();
 	void ReadySprint();
+
+/* Movement replication */
+public:
+	UFUNCTION(Server, Unreliable) void SMF(float AxisValue);
+	UFUNCTION(Server, Unreliable) void SMR(float AxisValue);
+
+	UFUNCTION(NetMulticast, Unreliable) void MMF(float AxisValue);
+	UFUNCTION(NetMulticast, Unreliable) void MMR(float AxisValue);
+
+	UFUNCTION(Server, Unreliable) void SBJ();
+	UFUNCTION(Server, Unreliable) void SEJ();
+
+	UFUNCTION(NetMulticast, Unreliable) void MBJ();
+	UFUNCTION(NetMulticast, Unreliable) void MEJ();
+
+	UFUNCTION(Server, Unreliable) void SBS();
+	UFUNCTION(Server, Unreliable) void SES();
+
+	UFUNCTION(NetMulticast, Unreliable) void MBS();
+	UFUNCTION(NetMulticast, Unreliable) void MES();
+public:
 
 	void ChangeView();
 
