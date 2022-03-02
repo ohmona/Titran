@@ -1,22 +1,20 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
+// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/GameModeBase.h"
-#include "TitranGameModeBase.generated.h"
+#include "TitranGameModeBase.h"
+#include "TitranPlayerState.h"
+#include "LobbyGameMode.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class TITRAN_API ATitranGameModeBase : public AGameModeBase
+class TITRAN_API ALobbyGameMode : public ATitranGameModeBase
 {
 	GENERATED_BODY()
 	
-public:
-	ATitranGameModeBase();
-
 protected:
 	virtual void BeginPlay() override;
 

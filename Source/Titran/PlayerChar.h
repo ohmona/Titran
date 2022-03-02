@@ -80,6 +80,10 @@ public:
 
 	UFUNCTION(NetMulticast, Unreliable) void MBS();
 	UFUNCTION(NetMulticast, Unreliable) void MES();
+
+	UFUNCTION(Server, Unreliable) void SSL(FHitResult hit);
+
+	UFUNCTION(NetMulticast, Unreliable) void MSL(FHitResult hit);
 public:
 
 	void ChangeView();

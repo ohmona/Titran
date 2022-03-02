@@ -6,6 +6,9 @@
 #include <Engine/Classes/Components/CapsuleComponent.h>
 #include <Engine/Classes/Camera/CameraComponent.h>
 #include <Net/UnrealNetwork.h>
+#include "IntButton.h"
+#include "LobbyGameState.h"
+#include "TitranPlayerState.h"
 
 APlayerChar::APlayerChar()
 {
@@ -132,7 +135,6 @@ void APlayerChar::BJump()
 	bWalking = false;
 	Movement->jump_request = true;
 }
-
 void APlayerChar::EJump()
 {
 	SEJ();
@@ -148,7 +150,6 @@ void APlayerChar::BSprint()
 		SBS();
 	}
 }
-
 void APlayerChar::ESprint()
 {
 	Movement->move_speed = 250;
@@ -198,7 +199,6 @@ void APlayerChar::SBJ_Implementation()
 	Movement->jump_request = true;
 	MBJ();
 }
-
 void APlayerChar::SEJ_Implementation()
 {
 	Movement->jump_request = false;
@@ -212,7 +212,6 @@ void APlayerChar::SBS_Implementation()
 	bWalking = false;
 	MBS();
 }
-
 void APlayerChar::SES_Implementation()
 {
 	Movement->move_speed = 250;
@@ -257,7 +256,6 @@ void APlayerChar::MBJ_Implementation()
 	bWalking = false;
 	Movement->jump_request = true;
 }
-
 void APlayerChar::MEJ_Implementation()
 {
 	Movement->jump_request = false;
@@ -267,19 +265,51 @@ void APlayerChar::MBS_Implementation()
 {
 	Movement->move_speed = 400;
 }
-
 void APlayerChar::MES_Implementation()
 {
 	Movement->move_speed = 250;
 }
 
-
+/* Left click */
 void APlayerChar::BSelect()
 {
 	FHitResult hit = DoLineTrace();
 	FVector loc = hit.Location;
 
-	UE_LOG(LogTemp, Log, TEXT("[fun] %s"), *loc.ToString());
+	/* Button Interaction */
+	AIntButton* button = Cast<AIntButton>(hit.GetActor());
+	if (button != nullptr) {
+		/* Play button animation */
+		button->Click();
+	}
+	SSL(hit);
+}
+
+void APlayerChar::SSL_Implementation(FHitResult hit)
+{
+	/* Button Interaction */
+	AIntButton* button = Cast<AIntButton>(hit.GetActor());
+	ALobbyGameState* lobbystate = Cast<ALobbyGameState>(GetWorld()->GetGameState());
+	if (button != nullptr) {
+		/* Play button animation */
+		button->Click();
+
+		/* Set Ready State */
+		if (lobbystate != nullptr && GetPlayerState<ATitranPlayerState>()->ready_state != EReadyState::READY) {
+			lobbystate->readied_player++;
+			GetPlayerState<ATitranPlayerState>()->ready_state = EReadyState::READY;
+		}
+	}
+	MSL(hit);
+}
+void APlayerChar::MSL_Implementation(FHitResult hit)
+{
+	/* Button Interaction */
+	AIntButton* button = Cast<AIntButton>(hit.GetActor());
+	if (button != nullptr) {
+		/* Play button animation */
+		button->Click();
+	}
 }
 
 void APlayerChar::ESelect()
@@ -327,7 +357,7 @@ FHitResult APlayerChar::DoLineTrace()
 
 	FCollisionQueryParams traceParams(SCENE_QUERY_STAT(instantShot), true, GetInstigator());
 	FHitResult hit(ForceInit);
-	if (GetWorld()->LineTraceSingleByChannel(hit, rayLocation, endTrace, ECC_Visibility, traceParams)) {
+	if (GetWorld()->LineTraceSingleByChannel(hit, rayLocation, endTrace, ECC_MAX, traceParams)) {
 		return hit;
 	}
 	FHitResult force(ForceInit);

@@ -27,7 +27,6 @@ void AMenuGamemode::GameHost()
 	BP_GH(controller, max_player, bUseLan);
 
 	if (bSucces) {
-		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Blue, "Host Succesful");
 		bSucces = false;
 	}
 }
@@ -41,7 +40,6 @@ void AMenuGamemode::GameJoin()
 	BP_GJ(controller, max_result, bUseLan);
 
 	if (bSucces) {
-		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Blue, "Join Succesful");
 		bSucces = false;
 	}
 }
