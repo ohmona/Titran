@@ -10,6 +10,7 @@ AMenuGamemode::AMenuGamemode()
 	GameSessionClass = ATitranSession::StaticClass();
 }
 
+/* initalize player to make available to restart game */
 void AMenuGamemode::BeginPlay()
 {
 	APlayerController* controller = GetWorld()->GetFirstPlayerController();

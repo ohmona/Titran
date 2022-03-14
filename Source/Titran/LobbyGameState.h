@@ -19,5 +19,6 @@ public:
 	int32 readied_player = 0;
 
 public:
+	UFUNCTION(BlueprintCallable) void MovePlayer();
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable) void BPLoadEveryPlayer();
 };

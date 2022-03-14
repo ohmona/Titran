@@ -3,16 +3,16 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/GameStateBase.h"
-#include "TitranGameStateBase.generated.h"
+#include "GameFramework/PlayerController.h"
+#include "TitranPlayerController.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class TITRAN_API ATitranGameStateBase : public AGameStateBase
+class TITRAN_API ATitranPlayerController : public APlayerController
 {
 	GENERATED_BODY()
-	
+
 public:
 };

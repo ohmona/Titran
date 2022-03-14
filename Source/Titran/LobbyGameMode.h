@@ -22,4 +22,8 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	virtual void PostLogin(APlayerController* NewPlayer) override;
+
+	virtual void Logout(AController* Exiting) override;
+
+	void WarpAll();
 };

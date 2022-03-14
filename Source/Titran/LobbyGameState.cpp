@@ -2,3 +2,8 @@
 
 
 #include "LobbyGameState.h"
+
+void ALobbyGameState::MovePlayer()
+{
+	GetWorld()->GetAuthGameMode()->ProcessServerTravel(TEXT("Default"), true);
+}
